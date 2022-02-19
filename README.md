@@ -7,6 +7,8 @@
     |_|  |_|  |_|______|_|  \_\_|  |_|\____/       |_|  |_|\____/|_|  |_|
 ```
 
+![workflow](https://github.com/pingu1/thermo-hum/actions/workflows/go.yml/badge.svg)
+
 # THERMO-HUM log analyzer tool
 
 ## Running the tool

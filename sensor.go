@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
-	"os"
 	"strconv"
     "strings"
 )
@@ -57,34 +57,38 @@ func (rth *RefTempteratureHumidity) SetRefHumidity(hum float64) {
 /**
  * Extracting reference values
  */
- func ExtractRef(refLine string) ReferenceInterface {
+ func ExtractRef(refLine string) (ReferenceInterface, error) {
     refTH := &RefTempteratureHumidity{}
 
     // Make sure header has the right number of elements
     ref := strings.Split(strings.TrimSpace(refLine), " ")
     if len(ref) != 3 {
-        fmt.Println("Error while parsing the header: not enough elements")
-        os.Exit(1)
+		error := errors.New("Error while parsing the header: not enough elements")
+		return refTH, error
     }
+
+	header := ref[0]
+	if header != "reference" {
+		error := errors.New("First line doesn't seem to contain the reference, stopping now")
+		return refTH, error
+	}
 
     // Make sure the ref. Temperature is set properly
     temp, err := strconv.ParseFloat(ref[1], 64)
     if err != nil {
-        fmt.Println("Error while parsing the header: " + err.Error())
-        os.Exit(1)
+		return refTH, err
     }
 
     // Make sure the ref. Humidity is set properly
     hum, err := strconv.ParseFloat(ref[2], 64)
     if err != nil {
-        fmt.Println("Error while parsing the header: " + err.Error())
-        os.Exit(1)
+		return refTH, err
     }
 
     refTH.SetRefTemperature(temp)
     refTH.SetRefHumidity(hum)
 
-    return refTH
+    return refTH, nil
 }
 
 /** Defining sensors **/
@@ -222,6 +226,8 @@ func (s *Sensor) getHumiditySensorRating(refHumidity float64) string {
 	return HumidityRejected
 }
 
+
+// Additional helper
 func getDeviation(refValue float64, value float64) float64 {
 	return math.Abs(refValue - value)
 }

@@ -52,6 +52,33 @@ func TestExtractSensorData_HappyPath(t *testing.T) {
 	assert.Equal(t, expectedValues, sensor.GetValues())
 }
 
+func TestExtractSensorData_HappyPathWithIntegers(t *testing.T) {
+	var lines []string
+
+	sensorLine := "thermometer temp-1"
+	dataLine1 := "2007-04-05T22:00 temp-1 72 "
+	dataLine2 := "2007-04-05T22:01 temp-1 76"
+
+	lines = append(lines, sensorLine)
+	lines = append(lines, dataLine1)
+	lines = append(lines, dataLine2)
+
+	res := ExtractSensorData(lines)
+
+	assert.NotNil(t, res)
+	assert.Equal(t, 1, len(res))
+	
+	sensor := res[0]
+	expectedType := Thermometer
+	expectedName := "temp-1"
+	expectedValues := []float64{72.0, 76.0}
+
+	assert.Equal(t, expectedType, sensor.GetType())
+	assert.Equal(t, expectedName, sensor.GetName())
+	assert.Equal(t, 2, len(sensor.GetValues()))
+	assert.Equal(t, expectedValues, sensor.GetValues())
+}
+
 func TestExtractSensorData_LinesInBadOrder(t *testing.T) {
 	var lines []string
 

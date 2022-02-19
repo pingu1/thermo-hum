@@ -20,7 +20,12 @@ func main() {
         lines = nil
     }
 
-    ref := ExtractRef(header)
+    ref, err := ExtractRef(header)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
     /** debugging **/
     fmt.Printf("\nRef. Temperature is %f | Ref. Humidity is %f\n\n", ref.GetRefTemperature(), ref.GetRefHumidity())
 
@@ -30,8 +35,9 @@ func main() {
     }
 
     sensors := ExtractSensorData(lines)
+    
     /** debugging **/
-    fmt.Printf("Found %d sensors\n", len(sensors))
+    fmt.Printf("Found %d sensors\n\n", len(sensors))
 
     /** debugging **/
     /* Testing synchroneously
