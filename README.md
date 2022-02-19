@@ -9,6 +9,8 @@
 
 # THERMO-HUM log analyzer tool
 
+## Running the tool
+
 To run the analyzer, either use
 
 ```shell
@@ -26,3 +28,11 @@ Type the values directly in the console, or copy/paste the log data.
 **Note:** log data must comply to the format given, else errors will be thrown
 
 When you're done typing, end the log capture using `Ctrl+]`
+
+## Testing the tool
+
+Simply run
+
+```shell
+go test
+```

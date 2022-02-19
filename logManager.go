@@ -77,7 +77,7 @@ func ExtractSensorData(lines []string) []SensorInterface {
         }
 
         if expectingSensor {
-            // 1. Create a new Sensor
+            // 1. Create a new sensor
             currentSensor = NewSensor(data[0], data[1])
             // 2. swap flags
             expectingSensor = false
