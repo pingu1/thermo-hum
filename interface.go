@@ -1,7 +1,7 @@
 package main
 
 type SensorInterface interface {
-	AppendData(data []string)
+	AppendData(data []string) error
 	GetType() string
 	GetName() string
 	GetValues() []float64

@@ -72,7 +72,7 @@ func ExtractSensorData(lines []string) []SensorInterface {
         }
 
         if expectingData {
-            // 1. Append values to current sensor
+            // 1. Append values to current sensor, don't care about errors (arbitrary choice)
             currentSensor.AppendData(data)
         }
 

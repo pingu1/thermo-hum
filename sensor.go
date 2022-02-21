@@ -9,21 +9,21 @@ import (
 )
 
 // Valid devices
-var Thermometer = "thermometer"
-var HumiditySensor = "humidity"
+const Thermometer = "thermometer"
+const HumiditySensor = "humidity"
 
 // Ratings
-var ThermometerUltraPrecise = "ultra precise"
-var ThermometerVeryPrecise = "very precise"
-var ThermometerPrecise = "precise"
-var HumidityAccepted = "accepted"
-var HumidityRejected = "rejected"
+const ThermometerUltraPrecise = "ultra precise"
+const ThermometerVeryPrecise = "very precise"
+const ThermometerPrecise = "precise"
+const HumidityAccepted = "accepted"
+const HumidityRejected = "rejected"
 
 // Control Values
-var ThermometerAvgRange = 0.5
-var ThermometerUltraPreciseSD = 3
-var ThermometerVeryPreciseSD = 5
-var HumidityAcceptedRange = 0.01
+const ThermometerAvgRange = 0.5
+const ThermometerUltraPreciseSD = 3
+const ThermometerVeryPreciseSD = 5
+const HumidityAcceptedRange = 0.01
 
 /** Defining reference Temperature and Humidity **/
 type RefTempteratureHumidity struct {
@@ -106,20 +106,23 @@ func NewSensor(sType string, sName string) SensorInterface {
     }
 }
 
-func (s *Sensor) AppendData(data []string) {
+func (s *Sensor) AppendData(data []string) error {
 	// input param is composed of 3 elements: date, sensor name and value recorded
+
+	// Here we assume that we're dealing with 1 sensor in particular
+	// If the data corresponds to another sensor, we simply discard the line
 	if data[1] != s.sensorName {
-		return
+		return errors.New("Data is not for the right sensor")
 	}
 
 	value, err := strconv.ParseFloat(data[2], 64)
 	if err != nil {
-		errorMsg := "Error while parsing the recorded measure for devide " + s.sensorName + " :"
-		fmt.Println(errorMsg + err.Error())
-        return
+		errorMsg := "Error while parsing the recorded measure for devide " + s.sensorName + " :" + err.Error()
+        return errors.New(errorMsg)
 	}
 
 	s.sensorValues = append(s.sensorValues, value)
+	return nil
 }
 
 func (s *Sensor) GetType() string {
@@ -138,6 +141,10 @@ func (s *Sensor) GetAverageValue() float64 {
 	var sum float64
 	nbrValues := len(s.sensorValues)
 
+	if nbrValues == 0 {
+		return float64(0)
+	}
+
 	for i := 0; i < nbrValues; i++ {
 		sum += s.sensorValues[i]
 	}
@@ -151,17 +158,26 @@ func (s *Sensor) GetStandardDeviation() float64 {
 	avg := s.GetAverageValue()
 	nbrValues := len(s.sensorValues)
 
+	if nbrValues == 0 {
+		return float64(0)
+	}
+
 	for i := 0; i < nbrValues; i++ {
 		sd += math.Pow(s.sensorValues[i] - avg, 2)
 	}
 
-	return math.Sqrt(sd/float64(nbrValues))
+	// We're using the Standard Deviation formula for samples and not population
+	// Indeed, we're testing random sensors, not all of them
+	return math.Sqrt(sd/float64(nbrValues-1))
 }
 
 func (s *Sensor) GetMaxDeviationPercentage(refValue float64) float64 {
-	maxDeviation := 0.0
+	maxDeviation := float64(0)
 
 	nbrValues := len(s.sensorValues)
+	if nbrValues == 0 {
+		return float64(0)
+	}
 
 	for i := 0; i < nbrValues; i++ {
 		deviation := getDeviation(refValue, s.sensorValues[i])/refValue
