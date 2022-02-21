@@ -192,11 +192,11 @@ func TestGetAverageValue_NoData(t *testing.T) {
 	expectedType := "Potato"
 	expectedName := "Potato-sensor"
 	expectedAvg := float64(0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 
 	res := sensor.GetAverageValue()
-	
+
 	assert.NotNil(t, res)
 	assert.Equal(t, expectedAvg, res)
 }
@@ -225,11 +225,11 @@ func TestGetStandardDeviation_NoData(t *testing.T) {
 	expectedType := "Potato"
 	expectedName := "Potato-sensor"
 	expectedAvg := float64(0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 
 	res := sensor.GetStandardDeviation()
-	
+
 	assert.NotNil(t, res)
 	assert.Equal(t, expectedAvg, res)
 }
@@ -259,144 +259,192 @@ func TestGetMaxDeviationPercentage_NoData(t *testing.T) {
 	expectedName := "Potato-sensor"
 	refValue := 1.25
 	expectedAvg := float64(0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 
 	res := sensor.GetMaxDeviationPercentage(refValue)
-	
+
 	assert.NotNil(t, res)
 	assert.Equal(t, expectedAvg, res)
 }
 
-func TestGetRating_HappyPath_ThermometerUltraPrecise(t *testing.T) {
+func TestCalculateRating_HappyPath_ThermometerUltraPrecise(t *testing.T) {
 	expectedType := "thermometer"
 	expectedName := "therm-1"
 	value1 := "69.5"
 	value2 := "70.1"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, ThermometerUltraPrecise, res)
 }
 
-func TestGetRating_HappyPath_ThermometerVeryPrecise(t *testing.T) {
+func TestCalculateRating_HappyPath_ThermometerVeryPrecise(t *testing.T) {
 	expectedType := "thermometer"
 	expectedName := "therm-1"
 	value1 := "67.5"
 	value2 := "72.5"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, ThermometerVeryPrecise, res)
 }
 
-func TestGetRating_HappyPath_ThermometerPreciseCorrectAvgButHugeStdDev(t *testing.T) {
+func TestCalculateRating_HappyPath_ThermometerPreciseCorrectAvgButHugeStdDev(t *testing.T) {
 	expectedType := "thermometer"
 	expectedName := "therm-1"
 	value1 := "60"
 	value2 := "80"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, ThermometerPrecise, res)
 }
 
-func TestGetRating_HappyPath_ThermometerPreciseCorrectStdDevButTotallyOff(t *testing.T) {
+func TestCalculateRating_HappyPath_ThermometerPreciseCorrectStdDevButTotallyOff(t *testing.T) {
 	expectedType := "thermometer"
 	expectedName := "therm-1"
 	value1 := "40.1"
 	value2 := "39.9"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, ThermometerPrecise, res)
 }
 
-func TestGetRating_HappyPath_HumidityAccepted(t *testing.T) {
+func TestCalculateRating_HappyPath_HumidityAccepted(t *testing.T) {
 	expectedType := "humidity"
 	expectedName := "hum-1"
 	value1 := "45.2"
 	value2 := "44.7"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, HumidityAccepted, res)
 }
 
-func TestGetRating_HappyPath_HumidityRejected(t *testing.T) {
+func TestCalculateRating_HappyPath_HumidityRejected(t *testing.T) {
 	expectedType := "humidity"
 	expectedName := "hum-1"
 	value1 := "45.2"
 	value2 := "44.1"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
 	assert.Equal(t, HumidityRejected, res)
 }
 
-func TestGetRating_WrongSensorType(t *testing.T) {
+func TestCalculateRating_WrongSensorType(t *testing.T) {
 	expectedType := "Potato"
 	expectedName := "Potato-sensor"
 	value1 := "70.0"
 	value2 := "70.0"
 	refValues := NewRefTemperatureHumidity(70.0, 45.0)
-	
+
 	sensor := NewSensor(expectedType, expectedName)
 	lineData1 := []string{"2000-01-01T00:00:00", expectedName, value1}
 	lineData2 := []string{"2000-01-01T00:00:00", expectedName, value2}
 	sensor.AppendData(lineData1)
 	sensor.AppendData(lineData2)
 
-	res := sensor.GetRating(refValues)
+	res := sensor.CalculateRating(refValues)
 
 	assert.NotNil(t, res)
-	assert.Equal(t, "Invalid sensor type for type " + expectedType + ". Checking next sensor", res)
+	assert.Equal(t, "Invalid sensor type for type "+expectedType+". Checking next sensor", res)
+}
+
+func TestComputeResults(t *testing.T) {
+	ref := &RefTemperatureHumidity{
+		refTemperature: 70.0,
+		refHumidity:    45.0,
+	}
+
+	sensor1 := &Sensor{
+		sensorType:   Thermometer,
+		sensorName:   "temp-1",
+		sensorValues: []float64{72.4, 76.0, 79.1, 75.6, 71.2, 69.2, 65.2, 62.8, 61.4, 64.0, 67.5, 69.4},
+		sensorRating: "",
+	}
+
+	sensor2 := &Sensor{
+		sensorType:   Thermometer,
+		sensorName:   "temp-2",
+		sensorValues: []float64{69.5, 70.1, 71.3, 71.5, 69.8},
+		sensorRating: "",
+	}
+
+	sensor3 := &Sensor{
+		sensorType:   HumiditySensor,
+		sensorName:   "hum-1",
+		sensorValues: []float64{45.2, 45.3, 45.1},
+		sensorRating: "",
+	}
+
+	sensor4 := &Sensor{
+		sensorType:   HumiditySensor,
+		sensorName:   "hum-2",
+		sensorValues: []float64{44.4, 43.9, 44.9, 43.8, 42.1},
+		sensorRating: "",
+	}
+
+	sensors := []SensorInterface{sensor1, sensor2, sensor3, sensor4}
+
+	ComputeResults(sensors, ref)
+
+	assert.NotNil(t, sensor1.sensorRating)
+	assert.Equal(t, ThermometerPrecise, sensor1.sensorRating)
+	assert.NotNil(t, sensor2.sensorRating)
+	assert.Equal(t, ThermometerUltraPrecise, sensor2.sensorRating)
+	assert.NotNil(t, sensor3.sensorRating)
+	assert.Equal(t, HumidityAccepted, sensor3.sensorRating)
+	assert.NotNil(t, sensor4.sensorRating)
+	assert.Equal(t, HumidityRejected, sensor4.sensorRating)
 }

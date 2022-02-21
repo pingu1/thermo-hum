@@ -2,10 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
-    "strings"
+	"strings"
 )
 
 // Valid devices
@@ -26,46 +25,53 @@ const ThermometerVeryPreciseSD = 5
 const HumidityAcceptedRange = 0.01
 
 /** Defining reference Temperature and Humidity **/
-type RefTempteratureHumidity struct {
-    refTemperature float64
-    refHumidity  float64
+type ReferenceInterface interface {
+	GetRefHumidity() float64
+	GetRefTemperature() float64
+	SetRefHumidity(hum float64)
+	SetRefTemperature(tmp float64)
+}
+
+type RefTemperatureHumidity struct {
+	refTemperature float64
+	refHumidity    float64
 }
 
 func NewRefTemperatureHumidity(temp float64, hum float64) ReferenceInterface {
-    return &RefTempteratureHumidity{
-        refTemperature: temp,
-        refHumidity: hum,
-    }
+	return &RefTemperatureHumidity{
+		refTemperature: temp,
+		refHumidity:    hum,
+	}
 }
 
-func (rth *RefTempteratureHumidity) GetRefTemperature() float64 {
-    return rth.refTemperature
+func (rth *RefTemperatureHumidity) GetRefTemperature() float64 {
+	return rth.refTemperature
 }
 
-func (rth *RefTempteratureHumidity) SetRefTemperature(temp float64) {
-    rth.refTemperature = temp
+func (rth *RefTemperatureHumidity) SetRefTemperature(temp float64) {
+	rth.refTemperature = temp
 }
 
-func (rth *RefTempteratureHumidity) GetRefHumidity() float64 {
-    return rth.refHumidity
+func (rth *RefTemperatureHumidity) GetRefHumidity() float64 {
+	return rth.refHumidity
 }
 
-func (rth *RefTempteratureHumidity) SetRefHumidity(hum float64) {
-    rth.refHumidity = hum
+func (rth *RefTemperatureHumidity) SetRefHumidity(hum float64) {
+	rth.refHumidity = hum
 }
 
 /**
  * Extracting reference values
  */
- func ExtractRef(refLine string) (ReferenceInterface, error) {
-    refTH := &RefTempteratureHumidity{}
+func ExtractRef(refLine string) (ReferenceInterface, error) {
+	refTH := &RefTemperatureHumidity{}
 
-    // Make sure header has the right number of elements
-    ref := strings.Split(strings.TrimSpace(refLine), " ")
-    if len(ref) != 3 {
+	// Make sure header has the right number of elements
+	ref := strings.Split(strings.TrimSpace(refLine), " ")
+	if len(ref) != 3 {
 		error := errors.New("Error while parsing the header: not enough elements")
 		return refTH, error
-    }
+	}
 
 	header := ref[0]
 	if header != "reference" {
@@ -73,37 +79,52 @@ func (rth *RefTempteratureHumidity) SetRefHumidity(hum float64) {
 		return refTH, error
 	}
 
-    // Make sure the ref. Temperature is set properly
-    temp, err := strconv.ParseFloat(ref[1], 64)
-    if err != nil {
+	// Make sure the ref. Temperature is set properly
+	temp, err := strconv.ParseFloat(ref[1], 64)
+	if err != nil {
 		return refTH, err
-    }
+	}
 
-    // Make sure the ref. Humidity is set properly
-    hum, err := strconv.ParseFloat(ref[2], 64)
-    if err != nil {
+	// Make sure the ref. Humidity is set properly
+	hum, err := strconv.ParseFloat(ref[2], 64)
+	if err != nil {
 		return refTH, err
-    }
+	}
 
-    refTH.SetRefTemperature(temp)
-    refTH.SetRefHumidity(hum)
+	refTH.SetRefTemperature(temp)
+	refTH.SetRefHumidity(hum)
 
-    return refTH, nil
+	return refTH, nil
 }
 
 /** Defining sensors **/
+type SensorInterface interface {
+	AppendData(data []string) error
+	GetType() string
+	GetName() string
+	GetValues() []float64
+	GetAverageValue() float64
+	GetStandardDeviation() float64
+	GetMaxDeviationPercentage(refValue float64) float64
+	CalculateRating(ref ReferenceInterface) string
+	SetRating(ref ReferenceInterface)
+	GetRating() string
+}
+
 type Sensor struct {
-    sensorType string
-    sensorName string
-    sensorValues []float64
+	sensorType   string
+	sensorName   string
+	sensorValues []float64
+	sensorRating string
 }
 
 func NewSensor(sType string, sName string) SensorInterface {
 	return &Sensor{
-        sensorType: sType,
-        sensorName: sName,
+		sensorType:   sType,
+		sensorName:   sName,
 		sensorValues: nil,
-    }
+		sensorRating: "",
+	}
 }
 
 func (s *Sensor) AppendData(data []string) error {
@@ -118,7 +139,7 @@ func (s *Sensor) AppendData(data []string) error {
 	value, err := strconv.ParseFloat(data[2], 64)
 	if err != nil {
 		errorMsg := "Error while parsing the recorded measure for devide " + s.sensorName + " :" + err.Error()
-        return errors.New(errorMsg)
+		return errors.New(errorMsg)
 	}
 
 	s.sensorValues = append(s.sensorValues, value)
@@ -149,7 +170,7 @@ func (s *Sensor) GetAverageValue() float64 {
 		sum += s.sensorValues[i]
 	}
 
-	return sum/float64(nbrValues)
+	return sum / float64(nbrValues)
 }
 
 func (s *Sensor) GetStandardDeviation() float64 {
@@ -163,12 +184,12 @@ func (s *Sensor) GetStandardDeviation() float64 {
 	}
 
 	for i := 0; i < nbrValues; i++ {
-		sd += math.Pow(s.sensorValues[i] - avg, 2)
+		sd += math.Pow(s.sensorValues[i]-avg, 2)
 	}
 
 	// We're using the Standard Deviation formula for samples and not population
 	// Indeed, we're testing random sensors, not all of them
-	return math.Sqrt(sd/float64(nbrValues-1))
+	return math.Sqrt(sd / float64(nbrValues-1))
 }
 
 func (s *Sensor) GetMaxDeviationPercentage(refValue float64) float64 {
@@ -180,7 +201,7 @@ func (s *Sensor) GetMaxDeviationPercentage(refValue float64) float64 {
 	}
 
 	for i := 0; i < nbrValues; i++ {
-		deviation := getDeviation(refValue, s.sensorValues[i])/refValue
+		deviation := getDeviation(refValue, s.sensorValues[i]) / refValue
 		if deviation > maxDeviation {
 			maxDeviation = deviation
 		}
@@ -189,7 +210,7 @@ func (s *Sensor) GetMaxDeviationPercentage(refValue float64) float64 {
 	return maxDeviation
 }
 
-func (s *Sensor) GetRating(ref ReferenceInterface) string {
+func (s *Sensor) CalculateRating(ref ReferenceInterface) string {
 	// Reject invalid sensor types
 	if !s.isValidSensorType() {
 		return "Invalid sensor type for type " + s.sensorType + ". Checking next sensor"
@@ -202,9 +223,12 @@ func (s *Sensor) GetRating(ref ReferenceInterface) string {
 	return s.getHumiditySensorRating(ref.GetRefHumidity())
 }
 
-func (s *Sensor) PrintRating(ref ReferenceInterface) {
-	rating := s.GetRating(ref)
-	fmt.Printf("%s: %s\n", s.sensorName, rating)
+func (s *Sensor) SetRating(ref ReferenceInterface) {
+	s.sensorRating = s.CalculateRating(ref)
+}
+
+func (s *Sensor) GetRating() string {
+	return s.sensorRating
 }
 
 func (s *Sensor) isValidSensorType() bool {
@@ -213,7 +237,7 @@ func (s *Sensor) isValidSensorType() bool {
 
 func (s *Sensor) getThermometerRating(refTemperature float64) string {
 	// We want the average temperature to be lower than 0.5 degrees from ref
-	
+
 	deviation := getDeviation(refTemperature, s.GetAverageValue())
 	if deviation > ThermometerAvgRange {
 		return ThermometerPrecise
@@ -241,7 +265,6 @@ func (s *Sensor) getHumiditySensorRating(refHumidity float64) string {
 
 	return HumidityRejected
 }
-
 
 // Additional helper
 func getDeviation(refValue float64, value float64) float64 {

@@ -40,7 +40,7 @@ func TestExtractSensorData_HappyPath(t *testing.T) {
 
 	assert.NotNil(t, res)
 	assert.Equal(t, 1, len(res))
-	
+
 	sensor := res[0]
 	expectedType := Thermometer
 	expectedName := "temp-1"
@@ -67,7 +67,7 @@ func TestExtractSensorData_HappyPathWithIntegers(t *testing.T) {
 
 	assert.NotNil(t, res)
 	assert.Equal(t, 1, len(res))
-	
+
 	sensor := res[0]
 	expectedType := Thermometer
 	expectedName := "temp-1"
@@ -95,7 +95,7 @@ func TestExtractSensorData_LinesInBadOrder(t *testing.T) {
 
 	assert.NotNil(t, res)
 	assert.Equal(t, 1, len(res))
-	
+
 	sensor := res[0]
 	expectedType := Thermometer
 	expectedName := "temp-1"
@@ -123,7 +123,7 @@ func TestExtractSensorData_LinesForBadSensor(t *testing.T) {
 
 	assert.NotNil(t, res)
 	assert.Equal(t, 1, len(res))
-	
+
 	sensor := res[0]
 	expectedType := Thermometer
 	expectedName := "temp-1"
@@ -157,7 +157,7 @@ func TestExtractSensorData_HappyPathWithTwoSensors(t *testing.T) {
 
 	assert.NotNil(t, res)
 	assert.Equal(t, 2, len(res))
-	
+
 	sensor1 := res[0]
 	expectedType1 := Thermometer
 	expectedName1 := "temp-1"
